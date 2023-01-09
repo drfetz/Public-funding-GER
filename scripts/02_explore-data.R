@@ -75,7 +75,7 @@ foerder_db %>%
 
 
 # Average funding received by federal state
-
+ 
 
 
 # Average funding received by federal state
