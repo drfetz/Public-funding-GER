@@ -1,22 +1,65 @@
 ---
-title: "Report"
+title: "Report on Public Funding in Germany (Jan 2022)"
 author: "drfetz"
 date: "2022-12-06"
 output: html_document
 ---
 
+```{r load-packages, include=FALSE}
+library(tidyverse)
+library(dplyr)
+library(magrittr)
+library(knitr)
+```
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
+## Overview
 
 This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
 
 When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
 
-```{r cars}
-summary(cars)
+```{r data, include=FALSE}
+foerder_db <- read.csv(file = "Foerderdatenbank_GER_clean.csv", 
+                       header = TRUE)
+
+```
+
+```{r variables, include=FALSE}
+# Variables
+
+# format number as numeric
+
+foerder_db$Fördersumme.in.EUR <- as.numeric(foerder_db$Fördersumme.in.EUR)
+
+# format dates
+
+foerder_db$date_start <- as.Date(foerder_db$Laufzeit.von, format = "%d.%m.%y")
+
+foerder_db$date_end <- as.Date(foerder_db$Laufzeit.bis, format = "%d.%m.%y")
+
+# project duration
+
+foerder_db$duration <- (foerder_db$date_end - foerder_db$date_start)
+```
+
+
+```{r overview}
+
+foerder_db %>%
+  group_by(Ressort) %>%
+  summarise(Number_Fundings = prettyNum(n(),big.mark = ",", scientific = F),
+            Number_Orgs = prettyNum(n_distinct(Zuwendungsempfänger),big.mark = ",", scientific = F),
+            Number_Cities = prettyNum(n_distinct(Ort),big.mark = ",", scientific = F),
+            Funding_Ave = prettyNum(mean(Fördersumme.in.EUR),big.mark = ",", scientific = F),
+            Funding_Total = prettyNum(sum(Fördersumme.in.EUR), big.mark = ",", scientific = F),
+            Duration_Ave = prettyNum(mean(duration, na.rm = T),big.mark = ",", scientific = F),
+            From = min(date_start, na.rm = T),
+            To = max(date_start, na.rm = T)
+  )
 ```
 
 ## Including Plots
