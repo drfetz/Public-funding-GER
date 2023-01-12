@@ -1,5 +1,5 @@
 ---
-title: "Report on Public Funding in Germany (Jan 2022)"
+title: "Public Funding in Germany as of January 2023"
 author: "drfetz"
 date: "2022-12-06"
 output: html_document
@@ -10,17 +10,26 @@ library(tidyverse)
 library(dplyr)
 library(magrittr)
 library(knitr)
+library(DT)
+library(kableExtra)
 ```
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Overview
+## Preface
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+The present report deals with public funding in Germany. Only **Verbundprojekte** - projects with more than two participating entities - have been assessed.
+The data is publicly available via: <https://foerderportal.bund.de/foekat/jsp/SucheAction.do>. 
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+## Funding by ressort
+
+BMBF = Bundesministerium für Bildung und Forschung, Federal ministry of education and research;
+BMDV = Bundesministerium für Digitales und Verkehr, Federal ministry of digital and transport;
+BMEL = Bundesministerium für Ernährung und Landwirtschaft, Federal ministry of food and agriculture;
+BMWK = Bundesministerium für Wirtschaft und Klimaschutz, Federal ministry of economic affairs and climate action.
+According to the website, each ministry is individually responsible for providing accurate data.
 
 ```{r data, include=FALSE}
 foerder_db <- read.csv(file = "Foerderdatenbank_GER_clean.csv", 
@@ -47,7 +56,7 @@ foerder_db$duration <- (foerder_db$date_end - foerder_db$date_start)
 ```
 
 
-```{r overview}
+```{r overview, echo=FALSE}
 
 foerder_db %>%
   group_by(Ressort) %>%
@@ -59,15 +68,46 @@ foerder_db %>%
             Duration_Ave = prettyNum(mean(duration, na.rm = T),big.mark = ",", scientific = F),
             From = min(date_start, na.rm = T),
             To = max(date_start, na.rm = T)
+  ) %>%
+kbl() %>%
+  kable_styling()
+
+```
+
+## Most funded organizations and entities in innovation and technology research
+
+The table displays entity names, the count of fundings, the average funding and the total funding they received given the provided data.
+
+```{r orgs and entities, echo=FALSE}
+
+foerder_tech_db <- foerder_db %>%
+  filter(Förderprofil == "Technologie- und Innovationsförderung" & Fördersumme.in.EUR > 0) %>%
+  group_by(Zuwendungsempfänger) %>%
+  summarise(Fundings = prettyNum(n(),big.mark = ",", scientific = F),
+            Funding_Ave = prettyNum(mean(Fördersumme.in.EUR),big.mark = ",", scientific = F),
+            Funding_Total = prettyNum(sum(Fördersumme.in.EUR), big.mark = ",", scientific = F)
   )
+
+datatable(foerder_tech_db)
+
+
 ```
 
-## Including Plots
+## Funding by federal state
 
-You can also embed plots, for example:
+The table displays entity names, the count of fundings, the average funding and the total funding they received given the provided data.
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r federal state, echo=FALSE}
+
+foerder_federal_db <- foerder_db %>%
+  filter(Förderprofil == "Technologie- und Innovationsförderung" & Fördersumme.in.EUR > 0) %>%
+  group_by(Bundesland) %>%
+  summarise(Fundings = prettyNum(n(),big.mark = ",", scientific = F),
+            Funding_Ave = prettyNum(mean(Fördersumme.in.EUR),big.mark = ",", scientific = F),
+            Funding_Total = prettyNum(sum(Fördersumme.in.EUR), big.mark = ",", scientific = F)
+  )
+
+datatable(foerder_federal_db)
+
+
 ```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
